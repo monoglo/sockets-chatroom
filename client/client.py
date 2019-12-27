@@ -44,7 +44,7 @@ class Client(Cmd):
                 print('[Client] 无法从服务器获取数据')
                 return 0
 
-    def __send_message_thread(self, message):
+    def __send_message_thread(self, receiver_uid, message):
         """
         发送消息线程
         :param message: 消息内容
@@ -53,7 +53,7 @@ class Client(Cmd):
             'type': 'message',
             'sender_uid': self.__uid,
             'sender_ip': socket.gethostbyname(socket.gethostname()),
-            'receiver_uid': '102',
+            'receiver_uid': receiver_uid,
             'message': message,
             'group_gid': '',
             'create_time': str(datetime.datetime.now())
@@ -180,11 +180,12 @@ class Client(Cmd):
         发送消息
         :param args: 参数
         """
-        message = args
+        receiver_uid = args.split(' ')[0]
+        message = args.split(' ')[1]
         # 显示自己发送的消息
         print('[' + str(self.__nickname) + '(' + str(self.__uid) + ')' + ']', message)
         # 开启子线程用于发送数据
-        thread = threading.Thread(target=self.__send_message_thread, args=(message,))
+        thread = threading.Thread(target=self.__send_message_thread, args=(receiver_uid, message,))
         thread.setDaemon(True)
         thread.start()
 

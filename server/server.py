@@ -97,11 +97,11 @@ class Server:
                         'type': 'message',
                         'sender_uid': message.sender_uid,
                         'sender_ip': message.sender_ip,
-                        'sender_nickname': session.query(User).filter(User.uid == message.sender_uid).first()[0],
+                        'sender_nickname': session.query(User.nickname).filter(User.uid == message.sender_uid).first()[0],
                         'receiver_uid': message.receiver_uid,
                         'message': message.message,
-                        'group_gid': message.group_gid,
-                        'group_name': session.query(Group).filter(Group.group_gid == message.group_gid).first(),
+                        'group_gid': '',
+                        'group_name': '',
                         'create_time': str(message.create_time)
                     }).encode())
                 return True
@@ -115,7 +115,7 @@ class Server:
                             'sender_uid': message.sender_uid,
                             'sender_ip': message.sender_ip,
                             'sender_nickname': session.query(User.nickname).filter(User.uid == message.sender_uid).first()[0],
-                            'receiver_uid': message.receiver_uid,
+                            'receiver_uid': '',
                             'message': message.message,
                             'group_gid': message.group_gid,
                             'group_name': session.query(Group.group_name).filter(Group.gid == message.group_gid).first()[0],
