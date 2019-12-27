@@ -43,7 +43,7 @@ class Client(Cmd):
         self.__socket.send(json.dumps({
             'type': 'message',
             'sender_uid': self.__uid,
-            'sender_ip': '127.0.0.1',
+            'sender_ip': socket.gethostbyname(socket.gethostname()),
             'receiver_uid': '102',
             'message': message,
             'group_gid': '',
@@ -58,7 +58,7 @@ class Client(Cmd):
         self.__socket.send(json.dumps({
             'type': 'message',
             'sender_uid': self.__uid,
-            'sender_ip': '127.0.0.1',
+            'sender_ip': socket.gethostbyname(socket.gethostname()),
             'receiver_uid': '',
             'message': message,
             'group_gid': group_gid,
@@ -74,7 +74,7 @@ class Client(Cmd):
             'type': 'group',
             'action': 'create',
             'creater_uid': self.__uid,
-            'creater_ip': '127.0.0.1',
+            'creater_ip': socket.gethostbyname(socket.gethostname()),
             'group_name': group_name,
             'create_time': str(datetime.datetime.now())
         }).encode())
@@ -107,7 +107,7 @@ class Client(Cmd):
             'type': 'login',
             'uid': uid,
             'password': password,
-            'ip_address': '127.0.0.1'
+            'ip_address': socket.gethostbyname(socket.gethostname())
         }).encode())
         # 尝试接受数据m
         # noinspection PyBroadException
@@ -131,6 +131,40 @@ class Client(Cmd):
                 print('[Client] 无法登录到聊天室')
         except Exception:
             print('[Client] 无法从服务器获取数据')
+
+    def do_register(self, args):
+        """
+        注册账户
+        :param args: 参数
+        """
+        nickname = args.split(' ')[0]
+        password = args.split(' ')[1]
+        self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__socket.connect(('127.0.0.1', 8888))
+        # 将昵称发送给服务器，获取用户uid
+        self.__socket.send(json.dumps({
+            'type': 'register',
+            'nickname': nickname,
+            'password': password,
+        }).encode())
+        # 尝试接受数据m
+        # noinspection PyBroadException
+        try:
+            print('等待中。。。')
+            buffer = self.__socket.recv(1024).decode()
+            obj = json.loads(buffer)
+            if obj['type'] == 'info':
+                if obj['status'] == 'success':
+                    print('[Client] 注册成功')
+                    print('[Server] 注册uid为：' + str(obj['uid']))
+                    self.__socket.close()
+                else:
+                    print('注册失败')
+                    self.__socket.close()
+            else:
+                print('[Client] 无法连接到聊天室')
+        except Exception as e:
+            print(e)
 
     def do_send(self, args):
         """
@@ -184,6 +218,12 @@ class Client(Cmd):
             print('[Help] login nickname - 登录到聊天室，nickname是你选择的昵称')
         elif command == 'send':
             print('[Help] send message - 发送消息，message是你输入的消息')
+        elif command == 'group_send':
+            print('[Help] group_send message - 群消息，message是你输入的消息')
+        elif command == 'create_group':
+            print('[Help] create_group group_name - 创建群组，group_name是你要创建的群组名')
+        elif command == 'join_group':
+            print('[Help] join_group group_gid - 加入群组，group_gid是你要加入的群组id')
         else:
             print('[Help] 没有查询到你想要了解的指令')
 

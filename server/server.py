@@ -249,7 +249,12 @@ class Server:
                 obj = json.loads(buffer)
                 print(obj)
                 if obj['type'] == 'register':
-                    self.__create_user(obj['nickname'], obj['password'])
+                    new_user_uid = self.__create_user(obj['nickname'], obj['password'])
+                    connection.send(json.dumps({
+                        'type': 'info',
+                        'uid': new_user_uid,
+                        'status': 'success'
+                    }).encode())
                 elif obj['type'] == 'login':
                     login_user = self.__user_login(obj['uid'], obj['password'], obj['ip_address'])
                     if login_user is not False:
