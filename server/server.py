@@ -66,12 +66,7 @@ class Server:
                         session.commit()
                         session.close()
                     elif obj['action'] == 'join':
-                        session = self.__DBSession()
-                        new_group_user = GroupUsers(gid=obj['group_gid'], uid=obj['uid'],
-                                                    join_time=datetime.datetime.now())
-                        session.add(new_group_user)
-                        session.commit()
-                        session.close()
+                        self.__user_join_group(obj['uid'], obj['group_gid'])
                 else:
                     print('无法解析')
 
@@ -102,10 +97,11 @@ class Server:
                         'type': 'message',
                         'sender_uid': message.sender_uid,
                         'sender_ip': message.sender_ip,
-                        'sender_nickname': session.query(User).filter(User.uid == message.sender_uid).first(),
+                        'sender_nickname': session.query(User).filter(User.uid == message.sender_uid).first()[0],
                         'receiver_uid': message.receiver_uid,
                         'message': message.message,
                         'group_gid': message.group_gid,
+                        'group_name': session.query(Group).filter(Group.group_gid == message.group_gid).first(),
                         'create_time': str(message.create_time)
                     }).encode())
                 return True
@@ -118,10 +114,11 @@ class Server:
                             'type': 'message',
                             'sender_uid': message.sender_uid,
                             'sender_ip': message.sender_ip,
-                            'sender_nickname': session.query(User).filter(User.uid == message.sender_uid).first(),
+                            'sender_nickname': session.query(User.nickname).filter(User.uid == message.sender_uid).first()[0],
                             'receiver_uid': message.receiver_uid,
                             'message': message.message,
                             'group_gid': message.group_gid,
+                            'group_name': session.query(Group.group_name).filter(Group.gid == message.group_gid).first()[0],
                             'create_time': str(message.create_time)
                         }).encode())
                 return True
@@ -160,10 +157,15 @@ class Server:
         :return: none
         """
         session = self.__DBSession()
+        relation = session.query(GroupUsers).filter(GroupUsers.uid == uid, GroupUsers.gid == gid).first()
+        if relation:
+            session.close()
+            return True
         new_group_user = GroupUsers(uid=uid, gid=gid, join_time=datetime.datetime.now())
         session.add(new_group_user)
         session.commit()
         session.close()
+        return True
 
     def __create_group(self, group_name, uid):
         """
@@ -200,15 +202,18 @@ class Server:
                 logined_user.ip_address = ip_address
                 logined_user.login_time = datetime.datetime.now()
                 session.commit()
+                user_nickname = login_user.nickname
                 print('登陆成功!')
                 session.close()
-                return login_user.nickname
+                return user_nickname
             else:
                 new_login_user = UserLogin(uid=uid, ip_address=ip_address, login_time=datetime.datetime.now())
                 session.add(new_login_user)
                 session.commit()
+                user_nickname = login_user.nickname
                 print('用户已经登陆!')
-                return login_user.nickname
+                session.close()
+                return str(user_nickname)
         else:
             print('用户名或密码错误!')
             return False

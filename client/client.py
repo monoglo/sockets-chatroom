@@ -32,8 +32,17 @@ class Client(Cmd):
                 print('\033[1;35m[SOCKET]\033[0m' + buffer)
                 obj = json.loads(buffer)
                 print(obj)
+                if obj['type'] == 'message':
+                    if obj['receiver_uid']:
+                        print('[' + str(obj['sender_nickname']) + '(' + str(obj['sender_uid']) + ')' + ']',
+                              obj['message'])
+                    elif obj['group_gid']:
+                        print('[' + str(obj['group_name']) + ']' + '[' + str(obj['sender_nickname']) + '(' + str(
+                            obj['sender_uid']) + ')' + ']',
+                              obj['message'])
             except Exception:
                 print('[Client] 无法从服务器获取数据')
+                return 0
 
     def __send_message_thread(self, message):
         """
@@ -175,7 +184,7 @@ class Client(Cmd):
         # 显示自己发送的消息
         print('[' + str(self.__nickname) + '(' + str(self.__uid) + ')' + ']', message)
         # 开启子线程用于发送数据
-        thread = threading.Thread(target=self.__send_message_thread, args=(message, ))
+        thread = threading.Thread(target=self.__send_message_thread, args=(message,))
         thread.setDaemon(True)
         thread.start()
 
@@ -184,12 +193,13 @@ class Client(Cmd):
         发送消息
         :param args: 参数
         """
+        # TODO 若不在群组中返回发送错误
         group_gid = args.split(' ')[0]
-        message = args
+        message = args.split(' ')[1]
         # 显示自己发送的消息
         print('[' + str(self.__nickname) + '(' + str(self.__uid) + ')' + ']', message)
         # 开启子线程用于发送数据
-        thread = threading.Thread(target=self.__group_send_message_thread, args=(group_gid, message, ))
+        thread = threading.Thread(target=self.__group_send_message_thread, args=(group_gid, message,))
         thread.setDaemon(True)
         thread.start()
 
@@ -212,19 +222,23 @@ class Client(Cmd):
         """
         command = arg.split(' ')[0]
         if command == '':
-            print('[Help] login nickname - 登录到聊天室，nickname是你选择的昵称')
+            print('[Help] register nickname password - 登录到聊天室，nickname是你选择的昵称，password是你的密码')
+            print('[Help] login uid password - 登录到聊天室，uid是你的账户id，password是你的密码')
             print('[Help] send message - 发送消息，message是你输入的消息')
+            print('[Help] group_send message - 群消息，message是你输入的消息')
+            print('[Help] create_group group_name - 创建群组，group_name是你要创建的群组名')
+            print('[Help] join_group group_gid - 加入群组，group_gid是你要加入的群组id')
+        elif command == 'register':
+            print('[Help] register nickname password - 登录到聊天室，nickname是你选择的昵称，password是你的密码')
         elif command == 'login':
             print('[Help] login nickname - 登录到聊天室，nickname是你选择的昵称')
         elif command == 'send':
             print('[Help] send message - 发送消息，message是你输入的消息')
         elif command == 'group_send':
-            print('[Help] group_send message - 群消息，message是你输入的消息')
+            print('[Help] group_send message - 发送群消息，message是你输入的消息')
         elif command == 'create_group':
             print('[Help] create_group group_name - 创建群组，group_name是你要创建的群组名')
         elif command == 'join_group':
             print('[Help] join_group group_gid - 加入群组，group_gid是你要加入的群组id')
         else:
             print('[Help] 没有查询到你想要了解的指令')
-
-
