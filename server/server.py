@@ -65,8 +65,23 @@ class Server:
                         session.add(new_group_user)
                         session.commit()
                         session.close()
+                        connection.send(json.dumps({
+                            'type': 'info',
+                            'field': 'group',
+                            'action': 'create',
+                            'gid': new_gid,
+                            'status': 'success'
+                        }).encode())
                     elif obj['action'] == 'join':
                         self.__user_join_group(obj['uid'], obj['group_gid'])
+                        session = self.__DBSession()
+                        connection.send(json.dumps({
+                            'type': 'info',
+                            'field': 'group',
+                            'group_name': session.query(Group.group_name).filter(Group.gid == obj['group_gid']).first()[0],
+                            'action': 'join',
+                            'status': 'success'
+                        }).encode())
                 else:
                     print('无法解析')
 

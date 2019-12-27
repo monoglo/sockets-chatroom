@@ -40,6 +40,20 @@ class Client(Cmd):
                         print('[' + str(obj['group_name']) + ']' + '[' + str(obj['sender_nickname']) + '(' + str(
                             obj['sender_uid']) + ')' + ']',
                               obj['message'])
+                elif obj['type'] == 'info':
+                    if obj['field'] == 'group':
+                        if obj['action'] == 'create':
+                            if obj['status'] == 'success':
+                                print('[Client] 创建群组成功')
+                                print('[Server] 群组gid为：' + str(obj['gid']))
+                            else:
+                                print('创建失败')
+                        elif obj['action'] == 'join':
+                            if obj['status'] == 'success':
+                                print('[Client] 加入群组'+obj['group_name']+'成功')
+                            else:
+                                print('创建失败')
+
             except Exception:
                 print('[Client] 无法从服务器获取数据')
                 return 0
